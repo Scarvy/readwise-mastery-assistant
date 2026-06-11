@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Readwise Mastery Assistant",
   "version": "0.1.0",
-  "description": "AI-assisted Q&A flashcard suggestions for Readwise's Master review form.",
+  "description": "AI-assisted Q&A flashcard suggestions for Readwise's Mastery card editor.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://readwise.io/*",

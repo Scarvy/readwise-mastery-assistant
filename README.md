@@ -3,9 +3,10 @@
 A Chrome extension that adds an AI assistant to Readwise's review pages
 ([Daily Review](https://readwise.io/dailyreview) and individual
 `readwise.io/reviews/[id]` pages). When you open a highlight's
-**Master → Question & Answer** flashcard form, it suggests **Q&A** flashcards
-based on the highlight (and your note), and lets you fill in the question and
-answer fields with one click.
+**Mastery card editor** (click **Master**) and switch to the
+**Question & Answer** tab, it suggests **Q&A** flashcards based on the
+highlight (and your note), and lets you fill in the question and answer
+fields with one click.
 
 ## Setup
 
@@ -35,8 +36,8 @@ answer fields with one click.
 ## How it works
 
 - **Content script** (`src/content/`) watches Readwise's review pages for the
-  Master form's Question & Answer create area and injects the assistant UI
-  there.
+  Mastery card editor's Question & Answer create area and injects the
+  assistant UI there.
 - **Background service worker** (`src/background/`) holds your API key,
   builds the prompt, and calls the Anthropic Messages API directly from the
   browser (using the `anthropic-dangerous-direct-browser-access` header).
