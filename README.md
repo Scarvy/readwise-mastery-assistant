@@ -7,6 +7,9 @@ editor and switch to the **Question & Answer** tab, it suggests Q&A
 flashcards based on the highlight (and your note) and fills them in for you
 with one click.
 
+> **Note:** This is a personal project. The initial MVP was written with
+> [Claude Code](https://claude.com/claude-code).
+
 ## Setup
 
 1. Get an Anthropic API key from
