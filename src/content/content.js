@@ -1,0 +1,265 @@
+const PANEL_CLASS = "rma-panel";
+
+function getActiveSlide() {
+  return document.querySelector(".highlight-detail-review.is-visible");
+}
+
+function getQACreateArea() {
+  return document.querySelector(".qa-create-area");
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// --- Field interaction -------------------------------------------------------
+
+function fillContentEditable(el, text) {
+  el.focus();
+  document.execCommand("selectAll", false, null);
+
+  const lines = text.split("\n");
+  lines.forEach((line, idx) => {
+    document.execCommand("insertText", false, line);
+    if (idx < lines.length - 1) {
+      document.execCommand("insertLineBreak");
+    }
+  });
+
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+// --- Panel rendering ---------------------------------------------------------
+
+function renderIdleState(panel) {
+  panel.innerHTML = "";
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "rma-suggest-button";
+  button.textContent = "✨ Suggest Q&A cards";
+  button.addEventListener("click", () => onSuggestClick(panel));
+  panel.appendChild(button);
+}
+
+function renderLoadingState(panel) {
+  panel.innerHTML = "";
+  const loading = document.createElement("div");
+  loading.className = "rma-loading";
+  loading.textContent = "Generating suggestions…";
+  panel.appendChild(loading);
+}
+
+function renderErrorState(panel, response) {
+  panel.innerHTML = "";
+  const error = document.createElement("div");
+  error.className = "rma-error";
+
+  if (response?.error === "missing-api-key") {
+    error.innerHTML =
+      'No Anthropic API key configured. <button type="button" class="rma-link-button">Open settings</button>';
+    error.querySelector("button").addEventListener("click", () => {
+      chrome.runtime.sendMessage({ type: "open-options" });
+    });
+  } else {
+    error.textContent = `Couldn't generate suggestions: ${
+      response?.message || "unknown error"
+    }`;
+  }
+
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "rma-suggest-button rma-retry-button";
+  retry.textContent = "Try again";
+  retry.addEventListener("click", () => onSuggestClick(panel));
+
+  panel.appendChild(error);
+  panel.appendChild(retry);
+}
+
+function renderSuggestions(panel, suggestions, qaArea) {
+  panel.innerHTML = "";
+
+  if (!suggestions.length) {
+    const empty = document.createElement("div");
+    empty.className = "rma-error";
+    empty.textContent = "No suggestions came back. Try again?";
+    panel.appendChild(empty);
+
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "rma-suggest-button rma-retry-button";
+    retry.textContent = "Try again";
+    retry.addEventListener("click", () => onSuggestClick(panel));
+    panel.appendChild(retry);
+    return;
+  }
+
+  const list = document.createElement("div");
+  list.className = "rma-suggestion-list";
+
+  suggestions.forEach((suggestion) => {
+    const card = document.createElement("div");
+    card.className = "rma-suggestion";
+
+    const body = document.createElement("div");
+    body.className = "rma-suggestion-body";
+    const q = document.createElement("p");
+    q.innerHTML = `<strong>Q:</strong> ${escapeHtml(suggestion.question)}`;
+    const a = document.createElement("p");
+    a.innerHTML = `<strong>A:</strong> ${escapeHtml(suggestion.answer)}`;
+    body.appendChild(q);
+    body.appendChild(a);
+    card.appendChild(body);
+
+    if (suggestion.rationale) {
+      const rationale = document.createElement("p");
+      rationale.className = "rma-rationale";
+      rationale.textContent = suggestion.rationale;
+      card.appendChild(rationale);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "rma-actions";
+
+    const useBtn = document.createElement("button");
+    useBtn.type = "button";
+    useBtn.className = "rma-action-button rma-insert-button";
+    useBtn.textContent = "Use this";
+    useBtn.addEventListener("click", () => {
+      const questionEl = qaArea.querySelector(".question-input");
+      const answerEl = qaArea.querySelector(".answer-input");
+      if (!questionEl || !answerEl) return;
+
+      fillContentEditable(questionEl, suggestion.question);
+      fillContentEditable(answerEl, suggestion.answer);
+
+      const original = useBtn.textContent;
+      useBtn.textContent = "Filled ✓";
+      setTimeout(() => {
+        useBtn.textContent = original;
+      }, 1500);
+    });
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "rma-action-button rma-copy-button";
+    copyBtn.textContent = "Copy";
+    copyBtn.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(`Q: ${suggestion.question}\nA: ${suggestion.answer}`);
+      const original = copyBtn.textContent;
+      copyBtn.textContent = "Copied ✓";
+      setTimeout(() => {
+        copyBtn.textContent = original;
+      }, 1500);
+    });
+
+    actions.appendChild(useBtn);
+    actions.appendChild(copyBtn);
+    card.appendChild(actions);
+
+    list.appendChild(card);
+  });
+
+  panel.appendChild(list);
+
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "rma-suggest-button rma-retry-button";
+  retry.textContent = "Suggest more";
+  retry.addEventListener("click", () => onSuggestClick(panel));
+  panel.appendChild(retry);
+}
+
+function onSuggestClick(panel) {
+  const slide = getActiveSlide();
+  const qaArea = getQACreateArea();
+  if (!slide || !qaArea) return;
+
+  renderLoadingState(panel);
+
+  const highlightText = slide.querySelector(".highlight-text")?.textContent.trim() || "";
+  const noteEl = slide.querySelector(".note-box-text");
+  const noteText =
+    noteEl && !noteEl.classList.contains("use-placeholder")
+      ? noteEl.textContent.trim()
+      : "";
+  const sourceTitle = slide.querySelector(".highlight-title")?.textContent.trim() || "";
+  const sourceAuthor = slide.querySelector(".highlight-author")?.textContent.trim() || "";
+
+  chrome.runtime.sendMessage(
+    {
+      type: "generate-suggestions",
+      payload: { highlightText, noteText, sourceTitle, sourceAuthor },
+    },
+    (response) => {
+      if (chrome.runtime.lastError) {
+        renderErrorState(panel, {
+          error: "request-failed",
+          message: chrome.runtime.lastError.message,
+        });
+        return;
+      }
+      if (!response?.ok) {
+        renderErrorState(panel, response);
+        return;
+      }
+      renderSuggestions(panel, response.suggestions, qaArea);
+    },
+  );
+}
+
+// --- Injection / sync --------------------------------------------------------
+
+function injectPanel(qaArea) {
+  const panel = document.createElement("div");
+  panel.className = PANEL_CLASS;
+  renderIdleState(panel);
+
+  const actionsRow = qaArea.querySelector(".columns");
+  if (actionsRow) {
+    actionsRow.insertAdjacentElement("beforebegin", panel);
+  } else {
+    qaArea.appendChild(panel);
+  }
+}
+
+function syncPanel() {
+  const qaArea = getQACreateArea();
+  const existing = document.querySelector(`.${PANEL_CLASS}`);
+
+  if (!qaArea) {
+    existing?.remove();
+    return;
+  }
+
+  if (existing && qaArea.contains(existing)) {
+    return; // already injected for this Q&A form
+  }
+
+  existing?.remove();
+  injectPanel(qaArea);
+}
+
+let scheduled = false;
+function scheduleSync() {
+  if (scheduled) return;
+  scheduled = true;
+  requestAnimationFrame(() => {
+    scheduled = false;
+    syncPanel();
+  });
+}
+
+const observer = new MutationObserver(scheduleSync);
+observer.observe(document.body, {
+  childList: true,
+  subtree: true,
+  attributes: true,
+  attributeFilter: ["class", "aria-hidden"],
+});
+
+scheduleSync();

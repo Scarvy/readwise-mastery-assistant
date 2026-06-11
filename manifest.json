@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Readwise Mastery Assistant",
+  "version": "0.1.0",
+  "description": "AI-assisted Q&A flashcard suggestions for Readwise's Master review form.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://readwise.io/*",
+    "https://api.anthropic.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://readwise.io/dailyreview*",
+        "https://readwise.io/reviews/*"
+      ],
+      "js": ["src/content/content.js"],
+      "css": ["src/content/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "src/options/options.html",
+  "action": {
+    "default_popup": "src/popup/popup.html"
+  }
+}
