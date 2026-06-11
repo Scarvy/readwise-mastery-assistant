@@ -1,7 +1,28 @@
 # CLAUDE.md
 
-Developer/architecture notes for the Readwise Mastery Assistant Chrome
-extension. See `README.md` for end-user setup/usage.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project overview
+
+A Manifest V3 Chrome extension ("Readwise Mastery Assistant") that injects an
+AI assistant into Readwise's review pages. When a user opens a highlight's
+Mastery card editor and switches to the **Question & Answer** tab, the
+extension suggests Q&A flashcards (via the Anthropic API) based on the
+highlight and the reader's note, and fills them into Readwise's own
+question/answer fields with one click. See `README.md` for end-user
+setup/usage.
+
+## Development
+
+- Plain vanilla JS/HTML/CSS — no dependencies, no package manager, no build
+  step.
+- **Load/reload**: `chrome://extensions` → enable **Developer mode** →
+  **Load unpacked** → select the repo root. After editing source files,
+  click the reload icon on the extension card and refresh the Readwise tab.
+- **Syntax check** (no test suite exists): `node --check src/background/background.js`
+  and `node --check src/content/content.js`.
+- There is no automated test suite — verification is manual in a real Chrome
+  profile signed into Readwise (see "Testing constraints" below).
 
 ## Architecture
 
@@ -13,10 +34,13 @@ extension. See `README.md` for end-user setup/usage.
   "Save Flashcard" action row. The panel is removed when `.qa-create-area`
   disappears.
 - **Background service worker** (`src/background/background.js`) — holds the
-  Anthropic API key (from `chrome.storage.local`), builds the prompt, and
-  calls `https://api.anthropic.com/v1/messages` directly from the browser
+  Anthropic API key (from `chrome.storage.local`), builds the prompt
+  (`SYSTEM_PROMPT` + `buildUserMessage`), and calls
+  `https://api.anthropic.com/v1/messages` directly from the browser
   (`anthropic-dangerous-direct-browser-access: true`). Default model
   `claude-haiku-4-5-20251001`; `claude-sonnet-4-6` is the alternative.
+  Communicates with the content script via `chrome.runtime.onMessage`
+  (`"generate-suggestions"`, `"open-options"`).
 - **Options page** (`src/options/`) — API key + model picker, persisted to
   `chrome.storage.local`.
 - **Popup** (`src/popup/`) — shows whether an API key is configured, links to
