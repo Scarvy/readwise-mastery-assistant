@@ -43,15 +43,15 @@ for end-user setup/usage.
   Default models: `claude-haiku-4-5-20251001` (Anthropic) / `gpt-4o-mini`
   (OpenAI); `claude-sonnet-4-6` / `gpt-4o` are the higher-quality
   alternatives. Communicates with the content script via
-  `chrome.runtime.onMessage` (`"generate-suggestions"`, `"open-options"`).
-- **Options page** (`src/options/`) — lets the user enter an API key + model
+  `chrome.runtime.onMessage` (`"generate-suggestions"`, `"open-settings"`).
+- **Settings page** (`src/settings/`) — lets the user enter an API key + model
   for each provider and pick the active `provider`, persisted to
   `chrome.storage.local` as `provider`, `anthropicApiKey`,
   `anthropicModel`, `openaiApiKey`, `openaiModel`. (Legacy keys `apiKey`/
   `model` from the Anthropic-only MVP are read as a fallback if the new
   Anthropic keys aren't set yet.)
 - **Popup** (`src/popup/`) — shows whether an API key is configured, links to
-  options.
+  settings.
 
 ## Key DOM selectors (Readwise review pages)
 

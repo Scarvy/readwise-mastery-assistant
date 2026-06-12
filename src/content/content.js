@@ -62,7 +62,7 @@ function renderErrorState(panel, response) {
     const providerName = response.provider === "openai" ? "OpenAI" : "Anthropic";
     error.innerHTML = `No ${providerName} API key configured. <button type="button" class="rma-link-button">Open settings</button>`;
     error.querySelector("button").addEventListener("click", () => {
-      chrome.runtime.sendMessage({ type: "open-options" });
+      chrome.runtime.sendMessage({ type: "open-settings" });
     });
   } else {
     error.textContent = `Couldn't generate suggestions: ${

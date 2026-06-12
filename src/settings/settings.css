@@ -4,7 +4,7 @@
   --bg: #ffffff;
   --muted: #6b7280;
   --border: #d1d5db;
-  --accent: #6366f1;
+  --accent: #4B85E0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -20,8 +20,13 @@
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
+  min-height: 100%;
+}
+
+body {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
@@ -29,18 +34,70 @@ body {
   background: var(--bg);
 }
 
-main {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 32px 24px;
+.settings-layout {
+  display: flex;
+  min-height: 100vh;
 }
 
-h1 {
-  font-size: 20px;
+.settings-nav {
+  flex: 0 0 33.333%;
+  max-width: 300px;
+  box-sizing: border-box;
+  padding: 32px 16px;
+  border-right: 1px solid var(--border);
+}
+
+.settings-nav h1 {
+  font-size: 16px;
+  margin: 0 0 20px;
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.nav-item.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+a.nav-item {
+  color: var(--muted);
+}
+
+a.nav-item:hover {
+  background: rgba(127, 127, 127, 0.1);
+  color: var(--fg);
+}
+
+.settings-content {
+  flex: 1;
+  box-sizing: border-box;
+  padding: 32px 40px;
+}
+
+h2 {
+  font-size: 18px;
   margin: 0 0 8px;
 }
 
 .subtitle {
+  max-width: 640px;
   color: var(--muted);
   font-size: 14px;
   margin: 0 0 24px;
@@ -50,6 +107,7 @@ form {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-width: 640px;
 }
 
 label {

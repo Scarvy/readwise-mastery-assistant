@@ -147,7 +147,7 @@ async function generateSuggestions({
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type === "open-options") {
+  if (message?.type === "open-settings") {
     chrome.runtime.openOptionsPage();
     return undefined;
   }

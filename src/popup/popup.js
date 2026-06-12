@@ -1,7 +1,7 @@
 const DEFAULT_PROVIDER = "anthropic";
 
 const statusEl = document.getElementById("status");
-const openOptionsBtn = document.getElementById("open-options");
+const openSettingsBtn = document.getElementById("open-settings");
 
 async function refreshStatus() {
   const settings = await chrome.storage.local.get([
@@ -26,7 +26,7 @@ async function refreshStatus() {
   }
 }
 
-openOptionsBtn.addEventListener("click", () => {
+openSettingsBtn.addEventListener("click", () => {
   chrome.runtime.openOptionsPage();
 });
 
