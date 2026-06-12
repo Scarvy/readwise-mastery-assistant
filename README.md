@@ -27,12 +27,10 @@ with one click.
 
 ## Usage
 
-1. Go to [readwise.io/dailyreview](https://readwise.io/dailyreview) (or any
-   `readwise.io/reviews/[id]` page).
-2. On a highlight, click **Master**, then switch to the
+1. On a highlight, click **Master**, then switch to the
    **Question & Answer** tab.
-3. Click **✨ Suggest Q&A cards**.
-4. Review the suggestions:
+2. Click **✨ Suggest Q&A cards**.
+3. Review the suggestions:
    - Click **Use this** to fill the Question and Answer fields with that
      suggestion (you can still edit them), then click Readwise's
      **Save Flashcard** button to save it.
