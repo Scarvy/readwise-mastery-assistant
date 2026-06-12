@@ -21,6 +21,9 @@ for end-user setup/usage.
   click the reload icon on the extension card and refresh the Readwise tab.
 - **Syntax check** (no test suite exists): `node --check src/background/background.js`
   and `node --check src/content/content.js`.
+- **Package for the Chrome Web Store**: `./scripts/build.sh` zips
+  `manifest.json`, `src/`, and `public/` into
+  `dist/readwise-mastery-assistant-<version>.zip`.
 - There is no automated test suite — verification is manual in a real Chrome
   profile signed into Readwise (see "Testing constraints" below).
 
