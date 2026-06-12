@@ -15,7 +15,8 @@
     {
       "matches": [
         "https://readwise.io/dailyreview*",
-        "https://readwise.io/reviews/*"
+        "https://readwise.io/reviews/*",
+        "https://readwise.io/bookreview/*"
       ],
       "js": ["src/content/content.js"],
       "css": ["src/content/content.css"],
