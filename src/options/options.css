@@ -58,6 +58,22 @@ label {
   margin-top: 12px;
 }
 
+fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+legend {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 4px;
+}
+
 input,
 select {
   font-size: 14px;

@@ -7,10 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A Manifest V3 Chrome extension ("Readwise Mastery Assistant") that injects an
 AI assistant into Readwise's review pages. When a user opens a highlight's
 Mastery card editor and switches to the **Question & Answer** tab, the
-extension suggests Q&A flashcards (via the Anthropic API) based on the
-highlight and the reader's note, and fills them into Readwise's own
-question/answer fields with one click. See `README.md` for end-user
-setup/usage.
+extension suggests Q&A flashcards (via the Anthropic or OpenAI API,
+user's choice) based on the highlight and the reader's note, and fills them
+into Readwise's own question/answer fields with one click. See `README.md`
+for end-user setup/usage.
 
 ## Development
 
@@ -34,16 +34,22 @@ setup/usage.
   **Question & Answer**) and injects the suggestion panel directly above the
   "Save Flashcard" action row. The panel is removed when `.qa-create-area`
   disappears.
-- **Background service worker** (`src/background/background.js`) — holds the
-  Anthropic API key (from `chrome.storage.local`), builds the prompt
-  (`SYSTEM_PROMPT` + `buildUserMessage`), and calls
-  `https://api.anthropic.com/v1/messages` directly from the browser
-  (`anthropic-dangerous-direct-browser-access: true`). Default model
-  `claude-haiku-4-5-20251001`; `claude-sonnet-4-6` is the alternative.
-  Communicates with the content script via `chrome.runtime.onMessage`
-  (`"generate-suggestions"`, `"open-options"`).
-- **Options page** (`src/options/`) — API key + model picker, persisted to
-  `chrome.storage.local`.
+- **Background service worker** (`src/background/background.js`) — builds the
+  prompt (`SYSTEM_PROMPT` + `buildUserMessage`) and dispatches to either
+  `callAnthropic` (`https://api.anthropic.com/v1/messages`, with
+  `anthropic-dangerous-direct-browser-access: true`) or `callOpenAI`
+  (`https://api.openai.com/v1/chat/completions`, with
+  `response_format: {type: "json_object"}`) based on the stored `provider`.
+  Default models: `claude-haiku-4-5-20251001` (Anthropic) / `gpt-4o-mini`
+  (OpenAI); `claude-sonnet-4-6` / `gpt-4o` are the higher-quality
+  alternatives. Communicates with the content script via
+  `chrome.runtime.onMessage` (`"generate-suggestions"`, `"open-options"`).
+- **Options page** (`src/options/`) — lets the user enter an API key + model
+  for each provider and pick the active `provider`, persisted to
+  `chrome.storage.local` as `provider`, `anthropicApiKey`,
+  `anthropicModel`, `openaiApiKey`, `openaiModel`. (Legacy keys `apiKey`/
+  `model` from the Anthropic-only MVP are read as a fallback if the new
+  Anthropic keys aren't set yet.)
 - **Popup** (`src/popup/`) — shows whether an API key is configured, links to
   options.
 
@@ -94,4 +100,4 @@ intentionally out of scope for now). `parseSuggestions` expects:
 - Cloze deletion suggestions
 - Auto-generation (suggestions are on-demand only)
 - Anki/AnkiConnect export
-- Multi-provider (OpenAI, etc.) support
+- Providers other than Anthropic and OpenAI

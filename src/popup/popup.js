@@ -1,13 +1,27 @@
+const DEFAULT_PROVIDER = "anthropic";
+
 const statusEl = document.getElementById("status");
 const openOptionsBtn = document.getElementById("open-options");
 
 async function refreshStatus() {
-  const { apiKey } = await chrome.storage.local.get(["apiKey"]);
+  const settings = await chrome.storage.local.get([
+    "provider",
+    "anthropicApiKey",
+    "openaiApiKey",
+    // legacy key from the Anthropic-only MVP
+    "apiKey",
+  ]);
+
+  const provider = settings.provider || DEFAULT_PROVIDER;
+  const apiKey =
+    provider === "openai" ? settings.openaiApiKey : settings.anthropicApiKey || settings.apiKey;
+  const providerName = provider === "openai" ? "OpenAI" : "Anthropic";
+
   if (apiKey) {
-    statusEl.textContent = "✅ API key configured";
+    statusEl.textContent = `✅ ${providerName} API key configured`;
     statusEl.classList.add("ok");
   } else {
-    statusEl.textContent = "⚠️ No Anthropic API key set yet";
+    statusEl.textContent = `⚠️ No ${providerName} API key set yet`;
     statusEl.classList.add("warn");
   }
 }

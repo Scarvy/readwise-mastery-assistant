@@ -1,7 +1,13 @@
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
-const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const MAX_TOKENS = 1024;
+
+const DEFAULT_PROVIDER = "anthropic";
+const DEFAULT_MODELS = {
+  anthropic: "claude-haiku-4-5-20251001",
+  openai: "gpt-4o-mini",
+};
 
 const SYSTEM_PROMPT = `You are an assistant that helps readers convert highlights from books and articles into spaced-repetition Q&A flashcards (e.g. for Anki).
 
@@ -59,9 +65,16 @@ function parseSuggestions(rawText) {
   );
 }
 
-async function callClaude({ apiKey, model, highlightText, noteText, sourceTitle, sourceAuthor }) {
-  const userContent = buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor });
+async function extractErrorDetail(response) {
+  const errorBody = await response.text().catch(() => "");
+  try {
+    return JSON.parse(errorBody)?.error?.message || errorBody;
+  } catch {
+    return errorBody;
+  }
+}
 
+async function callAnthropic({ apiKey, model, userContent }) {
   const response = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
     headers: {
@@ -79,20 +92,56 @@ async function callClaude({ apiKey, model, highlightText, noteText, sourceTitle,
   });
 
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => "");
-    let detail = errorBody;
-    try {
-      detail = JSON.parse(errorBody)?.error?.message || errorBody;
-    } catch {
-      // leave detail as raw text
-    }
-    throw new Error(`Anthropic API error (${response.status}): ${detail}`);
+    throw new Error(`Anthropic API error (${response.status}): ${await extractErrorDetail(response)}`);
   }
 
   const data = await response.json();
-  const text = (data.content || [])
+  return (data.content || [])
     .map((block) => (block.type === "text" ? block.text : ""))
     .join("");
+}
+
+async function callOpenAI({ apiKey, model, userContent }) {
+  const response = await fetch(OPENAI_API_URL, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: MAX_TOKENS,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userContent },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error (${response.status}): ${await extractErrorDetail(response)}`);
+  }
+
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+async function generateSuggestions({
+  provider,
+  apiKey,
+  model,
+  highlightText,
+  noteText,
+  sourceTitle,
+  sourceAuthor,
+}) {
+  const userContent = buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor });
+
+  const text =
+    provider === "openai"
+      ? await callOpenAI({ apiKey, model, userContent })
+      : await callAnthropic({ apiKey, model, userContent });
 
   return parseSuggestions(text);
 }
@@ -107,15 +156,35 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   (async () => {
     try {
-      const { apiKey, model } = await chrome.storage.local.get(["apiKey", "model"]);
+      const settings = await chrome.storage.local.get([
+        "provider",
+        "anthropicApiKey",
+        "anthropicModel",
+        "openaiApiKey",
+        "openaiModel",
+        // legacy keys from the Anthropic-only MVP
+        "apiKey",
+        "model",
+      ]);
+
+      const provider = settings.provider || DEFAULT_PROVIDER;
+      const apiKey =
+        provider === "openai"
+          ? settings.openaiApiKey
+          : settings.anthropicApiKey || settings.apiKey;
+      const model =
+        (provider === "openai" ? settings.openaiModel : settings.anthropicModel || settings.model) ||
+        DEFAULT_MODELS[provider];
+
       if (!apiKey) {
-        sendResponse({ ok: false, error: "missing-api-key" });
+        sendResponse({ ok: false, error: "missing-api-key", provider });
         return;
       }
 
-      const suggestions = await callClaude({
+      const suggestions = await generateSuggestions({
+        provider,
         apiKey,
-        model: model || DEFAULT_MODEL,
+        model,
         ...message.payload,
       });
 

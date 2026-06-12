@@ -59,8 +59,8 @@ function renderErrorState(panel, response) {
   error.className = "rma-error";
 
   if (response?.error === "missing-api-key") {
-    error.innerHTML =
-      'No Anthropic API key configured. <button type="button" class="rma-link-button">Open settings</button>';
+    const providerName = response.provider === "openai" ? "OpenAI" : "Anthropic";
+    error.innerHTML = `No ${providerName} API key configured. <button type="button" class="rma-link-button">Open settings</button>`;
     error.querySelector("button").addEventListener("click", () => {
       chrome.runtime.sendMessage({ type: "open-options" });
     });

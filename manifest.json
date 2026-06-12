@@ -6,7 +6,8 @@
   "permissions": ["storage"],
   "host_permissions": [
     "https://readwise.io/*",
-    "https://api.anthropic.com/*"
+    "https://api.anthropic.com/*",
+    "https://api.openai.com/*"
   ],
   "background": {
     "service_worker": "src/background/background.js"

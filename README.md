@@ -12,14 +12,18 @@ with one click.
 
 ## Setup
 
-1. Get an Anthropic API key from
-   [console.anthropic.com](https://console.anthropic.com/settings/keys).
+1. Get an API key for at least one provider:
+   - Anthropic: [console.anthropic.com](https://console.anthropic.com/settings/keys)
+   - OpenAI: [platform.openai.com](https://platform.openai.com/api-keys)
 2. Open `chrome://extensions`, enable **Developer mode** (top right), then
    click **Load unpacked** and select this project's folder.
 3. Click the extension's toolbar icon → **Open settings**, paste your API
-   key, choose a model, and click **Save**.
-   - Default model: **Claude Haiku 4.5** (fast and cheap).
-   - **Claude Sonnet 4.6** is available for higher-quality suggestions.
+   key(s), pick a model for each provider, choose which provider is
+   **Active**, and click **Save**.
+   - Anthropic default: **Claude Haiku 4.5** (fast and cheap); **Claude
+     Sonnet 4.6** is available for higher-quality suggestions.
+   - OpenAI default: **GPT-4o mini** (fast and cheap); **GPT-4o** is
+     available for higher-quality suggestions.
 
 ## Usage
 
