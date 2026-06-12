@@ -7,8 +7,7 @@ editor and switch to the **Question & Answer** tab, it suggests Q&A
 flashcards based on the highlight (and your note) and fills them in for you
 with one click.
 
-> **Note:** This is a personal project. The initial MVP was written with
-> [Claude Code](https://claude.com/claude-code).
+> **Note:** This is an unofficial, personal project.
 
 ## Setup
 
@@ -36,3 +35,12 @@ with one click.
      **Save Flashcard** button to save it.
    - Or click **Copy** to copy the suggestion to your clipboard for use
      elsewhere (e.g. Anki).
+
+## Privacy
+
+- Your highlight text and note are sent only to the AI provider you choose
+  (Anthropic or OpenAI), using the API key you provide.
+- Your API key(s) are stored locally in your browser
+  (`chrome.storage.local`) and are sent only to that provider's API.
+- This extension has no backend — nothing is sent to any server operated by
+  its developer.
