@@ -171,9 +171,13 @@ function renderSuggestions(suggestions) {
     const card = document.createElement("div");
     card.className = "suggestion-card";
     card.dataset.suggestion = JSON.stringify(s);
+    const exampleHtml = s.example
+      ? `<p class="example"><strong>Example:</strong> ${escapeHtml(s.example)}</p>`
+      : "";
     card.innerHTML = `
       <p class="question"><strong>Q:</strong> ${escapeHtml(s.question)}</p>
       <p class="answer"><strong>A:</strong> ${escapeHtml(s.answer)}</p>
+      ${exampleHtml}
       <p class="rationale"><em>${escapeHtml(s.rationale)}</em></p>
       <div class="score-row">
         <label>Score

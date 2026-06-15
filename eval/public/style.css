@@ -182,6 +182,12 @@ button:disabled {
   line-height: 1.4;
 }
 
+.suggestion-card .example {
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+  color: var(--muted);
+}
+
 .suggestion-card .rationale {
   color: var(--muted);
   font-size: 13px;
