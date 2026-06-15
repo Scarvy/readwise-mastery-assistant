@@ -77,6 +77,13 @@
   margin: 0 0 4px;
 }
 
+.rma-example {
+  margin: 4px 0 0;
+  padding-left: 8px;
+  border-left: 2px solid #e5e7eb;
+  color: #4b5563;
+}
+
 .rma-rationale {
   margin: 6px 0 0;
   font-size: 12px;

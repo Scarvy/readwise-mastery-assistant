@@ -113,7 +113,19 @@ function renderSuggestions(panel, suggestions, qaArea) {
     a.innerHTML = `<strong>A:</strong> ${escapeHtml(suggestion.answer)}`;
     body.appendChild(q);
     body.appendChild(a);
+
+    if (suggestion.example) {
+      const example = document.createElement("p");
+      example.className = "rma-example";
+      example.innerHTML = `<strong>Example:</strong> ${escapeHtml(suggestion.example)}`;
+      body.appendChild(example);
+    }
+
     card.appendChild(body);
+
+    const answerText = suggestion.example
+      ? `${suggestion.answer}\n\n${suggestion.example}`
+      : suggestion.answer;
 
     if (suggestion.rationale) {
       const rationale = document.createElement("p");
@@ -135,7 +147,7 @@ function renderSuggestions(panel, suggestions, qaArea) {
       if (!questionEl || !answerEl) return;
 
       fillContentEditable(questionEl, suggestion.question);
-      fillContentEditable(answerEl, suggestion.answer);
+      fillContentEditable(answerEl, answerText);
 
       const original = useBtn.textContent;
       useBtn.textContent = "Filled ✓";
@@ -149,7 +161,7 @@ function renderSuggestions(panel, suggestions, qaArea) {
     copyBtn.className = "rma-action-button rma-copy-button";
     copyBtn.textContent = "Copy";
     copyBtn.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(`Q: ${suggestion.question}\nA: ${suggestion.answer}`);
+      await navigator.clipboard.writeText(`Q: ${suggestion.question}\nA: ${answerText}`);
       const original = copyBtn.textContent;
       copyBtn.textContent = "Copied ✓";
       setTimeout(() => {
