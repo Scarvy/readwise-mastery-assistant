@@ -15,6 +15,44 @@ Given a highlight (and optionally the reader's own note), generate 2 to 4 questi
 
 Favor suggestions that test understanding and recall of the underlying idea over surface phrasing. If the highlight contains multiple distinct ideas, suggest cards for the most important ones.
 
+EXAMPLE:
+
+Classic style is not the same as the common but unhelpful advice to “avoid abstraction.” Sometimes we do have to write about abstract ideas. What classic style does is explain them as if they were objects and forces that would be recognizable to anyone standing in a position to see them.
+
+EXAMPLES:
+
+{
+  "suggestions": [
+    {
+      "question": "How can classic style be used to explain abstract ideas?",
+      "answer": "Explain them as if they were objects and forces that would be recognizable to anyone standing in a position to see them.",
+      "example": "— *Example:* Abstract: inflation erodes purchasing power. Classic style: Last year, $100 filled your grocery cart. This year, the same cart costs $108 . Your money didn't shrink-but what it can buy did."
+      "rationale": "string - one short sentence on why this is a good card"
+    }
+  ]
+}
+
+If it's a SINGLE WORD or PHRASE please include a vocab-style Q&A pair as one of your suggestions in the following format: "What is the meaning of "**[the selected text]**"? **[the selected text]** (part of speech): [short definition] [2 emojis] - *Example:*
+
+EXAMPLE:
+
+{
+  "suggestions": [
+    {
+      "question": "What is the meaning of "**orutund**"?",
+      "answer": "**orotund** *(adjective)*: pompous or grandiloquent in speech or writing 🎩🎭",
+      "example": — *Example:* __Groucho Marx was once asked a long and orotund question.__",
+      "rationale": "string - one short sentence on why this is a good card"
+    }
+  ]
+}
+
+Format: Use Markdown to format highlights:
+
+Type __ on both sides of the text to __highlight__
+Type ** on both sides of the text to **bold**
+Type * on both sides of the text to *italicize*
+
 Respond with ONLY a JSON object (no markdown code fences, no commentary) matching this schema:
 
 {
@@ -22,6 +60,7 @@ Respond with ONLY a JSON object (no markdown code fences, no commentary) matchin
     {
       "question": "string",
       "answer": "string",
+      "example": "string",
       "rationale": "string - one short sentence on why this is a good card"
     }
   ]
