@@ -148,7 +148,7 @@ async function generateSuggestions({
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "open-settings") {
-    chrome.runtime.openOptionsPage();
+    chrome.tabs.create({ url: chrome.runtime.getURL("src/settings/settings.html") });
     return undefined;
   }
 

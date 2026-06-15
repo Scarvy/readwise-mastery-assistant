@@ -30,8 +30,9 @@ for end-user setup/usage.
 ## Architecture
 
 - **Content script** (`src/content/content.js`, `content.css`) — runs on
-  `https://readwise.io/dailyreview*`, `https://readwise.io/reviews/*`, and
-  `https://readwise.io/bookreview/*`. A
+  `https://readwise.io/dailyreview*`, `https://readwise.io/review/*` (e.g.
+  streak-recovery URLs like `/review/2026-06-14?isStreakRecovery=true`),
+  `https://readwise.io/reviews/*`, and `https://readwise.io/bookreview/*`. A
   `MutationObserver` on `document.body` watches for the Mastery card editor's
   `.qa-create-area` (appears once the user clicks **Master** →
   **Question & Answer**) and injects the suggestion panel directly above the

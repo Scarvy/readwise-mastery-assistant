@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Flashcard Prompt Eval</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Flashcard Prompt Eval</h1>
+      <div class="controls">
+        <button id="refresh-highlights">Refresh highlights from Readwise</button>
+        <label for="source-filter" class="filter-label">Source</label>
+        <select id="source-filter"></select>
+        <span id="highlight-count"></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel highlight-panel">
+        <div class="nav">
+          <button id="prev">&larr; Prev</button>
+          <span id="position">0 / 0</span>
+          <button id="next">Next &rarr;</button>
+        </div>
+        <h2 id="source-title"></h2>
+        <p class="meta" id="source-meta"></p>
+        <blockquote id="highlight-text">
+          Click "Refresh highlights from Readwise" to load your library.
+        </blockquote>
+        <p class="note" id="highlight-note"></p>
+      </section>
+
+      <section class="panel prompt-panel">
+        <label for="prompt-label">Prompt variant label</label>
+        <input id="prompt-label" type="text" value="v1-baseline" />
+
+        <label for="system-prompt">System prompt</label>
+        <textarea id="system-prompt" rows="14"></textarea>
+
+        <div class="actions">
+          <button id="generate">Generate suggestions</button>
+          <span id="generate-status"></span>
+        </div>
+      </section>
+
+      <section class="panel suggestions-panel" id="suggestions"></section>
+
+      <section class="panel results-panel">
+        <h2>Saved scores</h2>
+        <button id="load-results">Refresh results</button>
+        <table id="results-table">
+          <thead>
+            <tr>
+              <th>Prompt variant</th>
+              <th>Avg score</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

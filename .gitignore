@@ -1,2 +1,8 @@
 dist/
 .DS_Store
+.claude/*.local.json
+
+# prompt eval tool - cached personal data
+eval/data/
+
+.env

@@ -27,7 +27,7 @@ async function refreshStatus() {
 }
 
 openSettingsBtn.addEventListener("click", () => {
-  chrome.runtime.openOptionsPage();
+  chrome.runtime.sendMessage({ type: "open-settings" });
 });
 
 refreshStatus();
