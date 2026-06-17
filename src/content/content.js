@@ -1,5 +1,8 @@
 const PANEL_CLASS = "rma-panel";
 
+let cachedSourceTitle = "";
+let cachedSourceAuthor = "";
+
 function getActiveSlide() {
   return document.querySelector(".highlight-detail-review.is-visible");
 }
@@ -203,8 +206,8 @@ function onSuggestClick(panel) {
     noteEl && !noteEl.classList.contains("use-placeholder")
       ? noteEl.textContent.trim()
       : "";
-  const sourceTitle = slide?.querySelector(".highlight-title")?.textContent.trim() || "";
-  const sourceAuthor = slide?.querySelector(".highlight-author")?.textContent.trim() || "";
+  const sourceTitle = cachedSourceTitle;
+  const sourceAuthor = cachedSourceAuthor;
 
   const payload = { mode, highlightText, noteText, sourceTitle, sourceAuthor };
 
@@ -256,7 +259,16 @@ function injectPanel(qaArea) {
 
 function syncPanel() {
   const qaArea = getQACreateArea();
+  const slide = getActiveSlide();
   const existing = document.querySelector(`.${PANEL_CLASS}`);
+
+  // Cache source metadata while the slide still has it (before Q&A editor opens and removes them)
+  if (slide && !qaArea) {
+    const title = slide.querySelector(".highlight-title")?.textContent.trim();
+    const author = slide.querySelector(".highlight-author")?.textContent.trim();
+    if (title) cachedSourceTitle = title;
+    if (author) cachedSourceAuthor = author;
+  }
 
   if (!qaArea) {
     existing?.remove();

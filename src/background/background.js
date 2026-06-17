@@ -178,7 +178,7 @@ async function callAnthropic({ apiKey, model, userContent, systemPrompt }) {
     .join("");
 }
 
-async function callOpenAI({ apiKey, model, userContent, systemPrompt }) {
+async function callOpenAI({ apiKey, model, userContent, systemPrompt, metadata }) {
   const response = await fetch(OPENAI_API_URL, {
     method: "POST",
     headers: {
@@ -189,6 +189,7 @@ async function callOpenAI({ apiKey, model, userContent, systemPrompt }) {
       model,
       max_tokens: MAX_TOKENS,
       response_format: { type: "json_object" },
+      metadata,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userContent },
@@ -209,9 +210,15 @@ async function generateSuggestions({ provider, apiKey, model, mode, ...payload }
   const systemPrompt = isImprove ? IMPROVE_SYSTEM_PROMPT : SUGGESTION_SYSTEM_PROMPT;
   const userContent = isImprove ? buildImproveMessage(payload) : buildUserMessage(payload);
 
+  const metadata = {
+    mode: isImprove ? "improve" : "suggest",
+    source_title: (payload.sourceTitle || "").slice(0, 512),
+    source_author: (payload.sourceAuthor || "").slice(0, 512),
+  };
+
   const text =
     provider === "openai"
-      ? await callOpenAI({ apiKey, model, userContent, systemPrompt })
+      ? await callOpenAI({ apiKey, model, userContent, systemPrompt, metadata })
       : await callAnthropic({ apiKey, model, userContent, systemPrompt });
 
   return parseSuggestions(text);
