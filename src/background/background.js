@@ -9,9 +9,8 @@ const DEFAULT_MODELS = {
   openai: "gpt-4o-mini",
 };
 
-const SYSTEM_PROMPT = `You are an assistant that helps readers convert highlights from books and articles into spaced-repetition Q&A flashcards (e.g. for Anki).
-
-Given a highlight (and optionally the reader's own note), generate 2 to 4 question-and-answer flashcard suggestions that test understanding of the core idea, not just verbatim recall of the highlight's wording.
+const SUGGESTION_SYSTEM_PROMPT = `You are an assistant that helps readers convert highlights from books and articles into spaced-repetition Q&A flashcards in Readwise.`;
+const SUGGESTION_USER_PROMPT = `Given a highlight (and optionally the reader's own note), generate 2 to 4 question-and-answer flashcard suggestions that test understanding of the core idea, not just verbatim recall of the highlight's wording.
 
 Favor suggestions that test understanding and recall of the underlying idea over surface phrasing. If the highlight contains multiple distinct ideas, suggest cards for the most important ones.
 
@@ -66,8 +65,30 @@ Respond with ONLY a JSON object (no markdown code fences, no commentary) matchin
   ]
 }`;
 
+const IMPROVE_SYSTEM_PROMPT = `You are an assistant that helps readers improve existing spaced-repetition Q&A flashcards in Readwise.`;
+
+const IMPROVE_USER_PROMPT = `Given an existing flashcard's question and answer (and optionally the original highlight), suggest 2 to 3 improved versions. Focus on making the question more precise and testable, the answer more concise and memorable, and optionally adding a concrete example that shows the idea applied in context.
+
+Use Markdown formatting where helpful:
+Type __ on both sides of the text to __highlight__
+Type ** on both sides of the text to **bold**
+Type * on both sides of the text to *italicize*
+
+Respond with ONLY a JSON object (no markdown code fences, no commentary) matching this schema:
+
+{
+  "suggestions": [
+    {
+      "question": "string",
+      "answer": "string",
+      "example": "string",
+      "rationale": "string - one short sentence on what was improved and why"
+    }
+  ]
+}`;
+
 function buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor }) {
-  const lines = [];
+  const lines = [SUGGESTION_USER_PROMPT, ""];
   if (sourceTitle) {
     lines.push(`Source: "${sourceTitle}"${sourceAuthor ? ` by ${sourceAuthor}` : ""}`);
   }
@@ -76,6 +97,23 @@ function buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor }
     lines.push(`Existing note: "${noteText.trim()}"`);
   }
   lines.push("", "Generate Q&A flashcard suggestions for this highlight.");
+  return lines.join("\n");
+}
+
+function buildImproveMessage({ highlightText, noteText, sourceTitle, sourceAuthor, existingQuestion, existingAnswer }) {
+  const lines = [IMPROVE_USER_PROMPT, ""];
+  if (sourceTitle) {
+    lines.push(`Source: "${sourceTitle}"${sourceAuthor ? ` by ${sourceAuthor}` : ""}`);
+  }
+  if (highlightText) {
+    lines.push(`Highlight: "${highlightText}"`);
+  }
+  if (noteText && noteText.trim()) {
+    lines.push(`Note: "${noteText.trim()}"`);
+  }
+  lines.push(`Existing question: "${existingQuestion}"`);
+  lines.push(`Existing answer: "${existingAnswer}"`);
+  lines.push("", "Suggest improvements to this flashcard.");
   return lines.join("\n");
 }
 
@@ -113,7 +151,7 @@ async function extractErrorDetail(response) {
   }
 }
 
-async function callAnthropic({ apiKey, model, userContent }) {
+async function callAnthropic({ apiKey, model, userContent, systemPrompt }) {
   const response = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
     headers: {
@@ -125,7 +163,7 @@ async function callAnthropic({ apiKey, model, userContent }) {
     body: JSON.stringify({
       model,
       max_tokens: MAX_TOKENS,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: "user", content: userContent }],
     }),
   });
@@ -140,7 +178,7 @@ async function callAnthropic({ apiKey, model, userContent }) {
     .join("");
 }
 
-async function callOpenAI({ apiKey, model, userContent }) {
+async function callOpenAI({ apiKey, model, userContent, systemPrompt }) {
   const response = await fetch(OPENAI_API_URL, {
     method: "POST",
     headers: {
@@ -152,7 +190,7 @@ async function callOpenAI({ apiKey, model, userContent }) {
       max_tokens: MAX_TOKENS,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: userContent },
       ],
     }),
@@ -166,21 +204,15 @@ async function callOpenAI({ apiKey, model, userContent }) {
   return data.choices?.[0]?.message?.content || "";
 }
 
-async function generateSuggestions({
-  provider,
-  apiKey,
-  model,
-  highlightText,
-  noteText,
-  sourceTitle,
-  sourceAuthor,
-}) {
-  const userContent = buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor });
+async function generateSuggestions({ provider, apiKey, model, mode, ...payload }) {
+  const isImprove = mode === "improve";
+  const systemPrompt = isImprove ? IMPROVE_SYSTEM_PROMPT : SUGGESTION_SYSTEM_PROMPT;
+  const userContent = isImprove ? buildImproveMessage(payload) : buildUserMessage(payload);
 
   const text =
     provider === "openai"
-      ? await callOpenAI({ apiKey, model, userContent })
-      : await callAnthropic({ apiKey, model, userContent });
+      ? await callOpenAI({ apiKey, model, userContent, systemPrompt })
+      : await callAnthropic({ apiKey, model, userContent, systemPrompt });
 
   return parseSuggestions(text);
 }
