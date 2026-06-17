@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Readwise Mastery Assistant",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "icons": {
     "128": "public/icons/icon128.png"
   },
