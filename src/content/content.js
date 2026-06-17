@@ -40,7 +40,8 @@ function renderIdleState(panel) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "rma-suggest-button";
-  button.textContent = "✨ Suggest Q&A cards";
+  button.textContent =
+    panel.dataset.mode === "improve" ? "✨ Improve this card" : "✨ Suggest Q&A cards";
   button.addEventListener("click", () => onSuggestClick(panel));
   panel.appendChild(button);
 }
@@ -189,24 +190,33 @@ function renderSuggestions(panel, suggestions, qaArea) {
 function onSuggestClick(panel) {
   const slide = getActiveSlide();
   const qaArea = getQACreateArea();
-  if (!slide || !qaArea) return;
+  const mode = panel.dataset.mode || "suggest";
+
+  if (!qaArea) return;
+  if (mode !== "improve" && !slide) return;
 
   renderLoadingState(panel);
 
-  const highlightText = slide.querySelector(".highlight-text")?.textContent.trim() || "";
-  const noteEl = slide.querySelector(".note-box-text");
+  const highlightText = slide?.querySelector(".highlight-text")?.textContent.trim() || "";
+  const noteEl = slide?.querySelector(".note-box-text");
   const noteText =
     noteEl && !noteEl.classList.contains("use-placeholder")
       ? noteEl.textContent.trim()
       : "";
-  const sourceTitle = slide.querySelector(".highlight-title")?.textContent.trim() || "";
-  const sourceAuthor = slide.querySelector(".highlight-author")?.textContent.trim() || "";
+  const sourceTitle = slide?.querySelector(".highlight-title")?.textContent.trim() || "";
+  const sourceAuthor = slide?.querySelector(".highlight-author")?.textContent.trim() || "";
+
+  const payload = { mode, highlightText, noteText, sourceTitle, sourceAuthor };
+
+  if (mode === "improve") {
+    payload.existingQuestion =
+      qaArea.querySelector(".question-input")?.textContent.trim() || "";
+    payload.existingAnswer =
+      qaArea.querySelector(".answer-input")?.textContent.trim() || "";
+  }
 
   chrome.runtime.sendMessage(
-    {
-      type: "generate-suggestions",
-      payload: { highlightText, noteText, sourceTitle, sourceAuthor },
-    },
+    { type: "generate-suggestions", payload },
     (response) => {
       if (chrome.runtime.lastError) {
         renderErrorState(panel, {
@@ -227,8 +237,13 @@ function onSuggestClick(panel) {
 // --- Injection / sync --------------------------------------------------------
 
 function injectPanel(qaArea) {
+  const questionEl = qaArea.querySelector(".question-input");
+  const answerEl = qaArea.querySelector(".answer-input");
+  const isEdit = !!(questionEl?.textContent.trim() && answerEl?.textContent.trim());
+
   const panel = document.createElement("div");
   panel.className = PANEL_CLASS;
+  panel.dataset.mode = isEdit ? "improve" : "suggest";
   renderIdleState(panel);
 
   const actionsRow = qaArea.querySelector(".columns");
