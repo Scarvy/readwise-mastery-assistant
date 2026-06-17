@@ -21,7 +21,9 @@
         "https://readwise.io/dailyreview*",
         "https://readwise.io/review/*",
         "https://readwise.io/reviews/*",
-        "https://readwise.io/bookreview/*"
+        "https://readwise.io/bookreview/*",
+        "https://readwise.io/master/due*",
+        "https://readwise.io/master/all*"
       ],
       "js": ["src/content/content.js"],
       "css": ["src/content/content.css"],
