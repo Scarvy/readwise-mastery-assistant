@@ -32,11 +32,27 @@
       </section>
 
       <section class="panel prompt-panel">
+        <div class="mode-toggle">
+          <span class="mode-label">Mode</span>
+          <button id="mode-suggest" class="mode-btn active">Suggest</button>
+          <button id="mode-improve" class="mode-btn">Improve</button>
+        </div>
+
         <label for="prompt-label">Prompt variant label</label>
         <input id="prompt-label" type="text" value="v1-baseline" />
 
         <label for="system-prompt">System prompt</label>
-        <textarea id="system-prompt" rows="14"></textarea>
+        <textarea id="system-prompt" rows="2"></textarea>
+
+        <label for="user-prompt">User prompt</label>
+        <textarea id="user-prompt" rows="14"></textarea>
+
+        <div id="improve-fields" class="improve-fields" hidden>
+          <label for="existing-question">Existing question</label>
+          <textarea id="existing-question" rows="2" placeholder="Paste the existing flashcard question here…"></textarea>
+          <label for="existing-answer">Existing answer</label>
+          <textarea id="existing-answer" rows="3" placeholder="Paste the existing flashcard answer here…"></textarea>
+        </div>
 
         <div class="actions">
           <button id="generate">Generate suggestions</button>

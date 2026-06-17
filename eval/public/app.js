@@ -2,9 +2,13 @@ const state = {
   highlights: [],
   filtered: [],
   index: 0,
+  mode: "suggest",
+  defaults: { suggest: {}, improve: {} },
 };
 
 const els = {
+  modeSuggest: document.getElementById("mode-suggest"),
+  modeImprove: document.getElementById("mode-improve"),
   refreshHighlights: document.getElementById("refresh-highlights"),
   sourceFilter: document.getElementById("source-filter"),
   highlightCount: document.getElementById("highlight-count"),
@@ -17,6 +21,10 @@ const els = {
   highlightNote: document.getElementById("highlight-note"),
   promptLabel: document.getElementById("prompt-label"),
   systemPrompt: document.getElementById("system-prompt"),
+  userPrompt: document.getElementById("user-prompt"),
+  improveFields: document.getElementById("improve-fields"),
+  existingQuestion: document.getElementById("existing-question"),
+  existingAnswer: document.getElementById("existing-answer"),
   generate: document.getElementById("generate"),
   generateStatus: document.getElementById("generate-status"),
   suggestions: document.getElementById("suggestions"),
@@ -30,10 +38,25 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-async function loadDefaultPrompt() {
+function setMode(mode) {
+  state.mode = mode;
+  els.modeSuggest.classList.toggle("active", mode === "suggest");
+  els.modeImprove.classList.toggle("active", mode === "improve");
+  els.improveFields.hidden = mode !== "improve";
+
+  const defaults = state.defaults[mode];
+  if (defaults.systemPrompt !== undefined) els.systemPrompt.value = defaults.systemPrompt;
+  if (defaults.userPrompt !== undefined) els.userPrompt.value = defaults.userPrompt;
+
+  els.suggestions.innerHTML = "";
+}
+
+async function loadDefaultPrompts() {
   const res = await fetch("/api/default-prompt");
   const data = await res.json();
-  els.systemPrompt.value = data.systemPrompt;
+  state.defaults = data;
+  els.systemPrompt.value = data.suggest.systemPrompt;
+  els.userPrompt.value = data.suggest.userPrompt;
 }
 
 async function loadHighlights() {
@@ -138,15 +161,35 @@ async function generateSuggestions() {
   const h = state.filtered[state.index];
   if (!h) return;
 
+  if (state.mode === "improve") {
+    const q = els.existingQuestion.value.trim();
+    const a = els.existingAnswer.value.trim();
+    if (!q || !a) {
+      els.generateStatus.textContent = "Fill in the existing question and answer first.";
+      return;
+    }
+  }
+
   els.generate.disabled = true;
   els.generateStatus.textContent = "Generating…";
   els.suggestions.innerHTML = "";
 
   try {
+    const body = {
+      highlight: h,
+      mode: state.mode,
+      systemPrompt: els.systemPrompt.value,
+      userPrompt: els.userPrompt.value,
+    };
+    if (state.mode === "improve") {
+      body.existingQuestion = els.existingQuestion.value.trim();
+      body.existingAnswer = els.existingAnswer.value.trim();
+    }
+
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ highlight: h, systemPrompt: els.systemPrompt.value }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -225,8 +268,10 @@ async function saveScores() {
     body: JSON.stringify({
       highlightId: h.id,
       highlightTitle: h.title,
+      mode: state.mode,
       promptLabel: els.promptLabel.value,
       systemPrompt: els.systemPrompt.value,
+      userPrompt: els.userPrompt.value,
       suggestions,
     }),
   });
@@ -245,7 +290,7 @@ async function loadResults() {
   for (const record of scores) {
     for (const s of record.suggestions || []) {
       if (typeof s.score !== "number") continue;
-      const label = record.promptLabel || "(unlabeled)";
+      const label = `${record.mode || "suggest"} / ${record.promptLabel || "(unlabeled)"}`;
       byLabel[label] = byLabel[label] || { total: 0, count: 0 };
       byLabel[label].total += s.score;
       byLabel[label].count += 1;
@@ -260,6 +305,8 @@ async function loadResults() {
   });
 }
 
+els.modeSuggest.addEventListener("click", () => setMode("suggest"));
+els.modeImprove.addEventListener("click", () => setMode("improve"));
 els.refreshHighlights.addEventListener("click", refreshHighlights);
 els.sourceFilter.addEventListener("change", applyFilter);
 els.prev.addEventListener("click", showPrev);
@@ -267,6 +314,6 @@ els.next.addEventListener("click", showNext);
 els.generate.addEventListener("click", generateSuggestions);
 els.loadResults.addEventListener("click", loadResults);
 
-loadDefaultPrompt();
+loadDefaultPrompts();
 loadHighlights();
 loadResults();
