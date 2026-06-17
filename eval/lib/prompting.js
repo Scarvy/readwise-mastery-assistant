@@ -1,21 +1,20 @@
 // Mirrors the prompt-building logic in src/background/background.js.
-// This eval tool is for iterating on prompt *variants*, so DEFAULT_SYSTEM_PROMPT
-// is just a starting point for the editable textarea in the UI, not kept in
-// lockstep with the extension.
+// Prompt text is always passed in as a parameter so the eval UI's editable
+// textareas drive what gets sent — these constants are just the defaults.
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 const MAX_TOKENS = 1024;
 
-const DEFAULT_SYSTEM_PROMPT = `You are an assistant that helps readers convert highlights from books and articles into spaced-repetition Q&A flashcards (e.g. for Anki).
+const DEFAULT_SUGGESTION_SYSTEM_PROMPT = `You are an assistant that helps readers convert highlights from books and articles into spaced-repetition Q&A flashcards in Readwise.`;
 
-Given a highlight (and optionally the reader's own note), generate 2 to 4 question-and-answer flashcard suggestions that test understanding of the core idea, not just verbatim recall of the highlight's wording.
+const DEFAULT_SUGGESTION_USER_PROMPT = `Given a highlight (and optionally the reader's own note), generate 2 to 4 question-and-answer flashcard suggestions that test understanding of the core idea, not just verbatim recall of the highlight's wording.
 
 Favor suggestions that test understanding and recall of the underlying idea over surface phrasing. If the highlight contains multiple distinct ideas, suggest cards for the most important ones.
 
 EXAMPLE:
 
-Classic style is not the same as the common but unhelpful advice to “avoid abstraction.” Sometimes we do have to write about abstract ideas. What classic style does is explain them as if they were objects and forces that would be recognizable to anyone standing in a position to see them.
+Classic style is not the same as the common but unhelpful advice to "avoid abstraction." Sometimes we do have to write about abstract ideas. What classic style does is explain them as if they were objects and forces that would be recognizable to anyone standing in a position to see them.
 
 EXAMPLES:
 
@@ -64,8 +63,30 @@ Respond with ONLY a JSON object (no markdown code fences, no commentary) matchin
   ]
 }`;
 
-function buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor }) {
-  const lines = [];
+const DEFAULT_IMPROVE_SYSTEM_PROMPT = `You are an assistant that helps readers improve existing spaced-repetition Q&A flashcards in Readwise.`;
+
+const DEFAULT_IMPROVE_USER_PROMPT = `Given an existing flashcard's question and answer (and optionally the original highlight), suggest 2 to 3 improved versions. Focus on making the question more precise and testable, the answer more concise and memorable, and optionally adding a concrete example that shows the idea applied in context.
+
+Use Markdown formatting where helpful:
+Type __ on both sides of the text to __highlight__
+Type ** on both sides of the text to **bold**
+Type * on both sides of the text to *italicize*
+
+Respond with ONLY a JSON object (no markdown code fences, no commentary) matching this schema:
+
+{
+  "suggestions": [
+    {
+      "question": "string",
+      "answer": "string",
+      "example": "string",
+      "rationale": "string - one short sentence on what was improved and why"
+    }
+  ]
+}`;
+
+function buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor, userPrompt }) {
+  const lines = [userPrompt, ""];
   if (sourceTitle) {
     lines.push(`Source: "${sourceTitle}"${sourceAuthor ? ` by ${sourceAuthor}` : ""}`);
   }
@@ -74,6 +95,23 @@ function buildUserMessage({ highlightText, noteText, sourceTitle, sourceAuthor }
     lines.push(`Existing note: "${noteText.trim()}"`);
   }
   lines.push("", "Generate Q&A flashcard suggestions for this highlight.");
+  return lines.join("\n");
+}
+
+function buildImproveMessage({ highlightText, noteText, sourceTitle, sourceAuthor, existingQuestion, existingAnswer, userPrompt }) {
+  const lines = [userPrompt, ""];
+  if (sourceTitle) {
+    lines.push(`Source: "${sourceTitle}"${sourceAuthor ? ` by ${sourceAuthor}` : ""}`);
+  }
+  if (highlightText) {
+    lines.push(`Highlight: "${highlightText}"`);
+  }
+  if (noteText && noteText.trim()) {
+    lines.push(`Note: "${noteText.trim()}"`);
+  }
+  lines.push(`Existing question: "${existingQuestion}"`);
+  lines.push(`Existing answer: "${existingAnswer}"`);
+  lines.push("", "Suggest improvements to this flashcard.");
   return lines.join("\n");
 }
 
@@ -137,8 +175,12 @@ async function callAnthropic({ apiKey, model, systemPrompt, userContent }) {
 }
 
 module.exports = {
-  DEFAULT_SYSTEM_PROMPT,
+  DEFAULT_SUGGESTION_SYSTEM_PROMPT,
+  DEFAULT_SUGGESTION_USER_PROMPT,
+  DEFAULT_IMPROVE_SYSTEM_PROMPT,
+  DEFAULT_IMPROVE_USER_PROMPT,
   buildUserMessage,
+  buildImproveMessage,
   parseSuggestions,
   callAnthropic,
 };

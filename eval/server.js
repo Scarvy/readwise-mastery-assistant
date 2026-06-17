@@ -12,8 +12,12 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const {
-  DEFAULT_SYSTEM_PROMPT,
+  DEFAULT_SUGGESTION_SYSTEM_PROMPT,
+  DEFAULT_SUGGESTION_USER_PROMPT,
+  DEFAULT_IMPROVE_SYSTEM_PROMPT,
+  DEFAULT_IMPROVE_USER_PROMPT,
   buildUserMessage,
+  buildImproveMessage,
   parseSuggestions,
   callAnthropic,
 } = require("./lib/prompting");
@@ -146,7 +150,16 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
 
     if (req.method === "GET" && url.pathname === "/api/default-prompt") {
-      sendJSON(res, 200, { systemPrompt: DEFAULT_SYSTEM_PROMPT });
+      sendJSON(res, 200, {
+        suggest: {
+          systemPrompt: DEFAULT_SUGGESTION_SYSTEM_PROMPT,
+          userPrompt: DEFAULT_SUGGESTION_USER_PROMPT,
+        },
+        improve: {
+          systemPrompt: DEFAULT_IMPROVE_SYSTEM_PROMPT,
+          userPrompt: DEFAULT_IMPROVE_USER_PROMPT,
+        },
+      });
       return;
     }
 
@@ -170,17 +183,29 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "POST" && url.pathname === "/api/generate") {
       const config = loadConfig();
-      const { highlight, systemPrompt } = await readJSONBody(req);
-      const userContent = buildUserMessage({
-        highlightText: highlight.text,
-        noteText: highlight.note,
-        sourceTitle: highlight.title,
-        sourceAuthor: highlight.author,
-      });
+      const { highlight, mode, systemPrompt, userPrompt, existingQuestion, existingAnswer } = await readJSONBody(req);
+      const isImprove = mode === "improve";
+      const userContent = isImprove
+        ? buildImproveMessage({
+            highlightText: highlight.text,
+            noteText: highlight.note,
+            sourceTitle: highlight.title,
+            sourceAuthor: highlight.author,
+            existingQuestion: existingQuestion || "",
+            existingAnswer: existingAnswer || "",
+            userPrompt: userPrompt || DEFAULT_IMPROVE_USER_PROMPT,
+          })
+        : buildUserMessage({
+            highlightText: highlight.text,
+            noteText: highlight.note,
+            sourceTitle: highlight.title,
+            sourceAuthor: highlight.author,
+            userPrompt: userPrompt || DEFAULT_SUGGESTION_USER_PROMPT,
+          });
       const text = await callAnthropic({
         apiKey: config.anthropicApiKey,
-        model: config.anthropicModel || "claude-haiku-4-5-20251001",
-        systemPrompt: systemPrompt || DEFAULT_SYSTEM_PROMPT,
+        model: config.anthropicModel,
+        systemPrompt: systemPrompt || (isImprove ? DEFAULT_IMPROVE_SYSTEM_PROMPT : DEFAULT_SUGGESTION_SYSTEM_PROMPT),
         userContent,
       });
       sendJSON(res, 200, { suggestions: parseSuggestions(text) });
