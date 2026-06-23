@@ -3,6 +3,12 @@ const PANEL_CLASS = "rma-panel";
 let cachedSourceTitle = "";
 let cachedSourceAuthor = "";
 
+function incrementStat(key) {
+  chrome.storage.local.get(key, (result) => {
+    chrome.storage.local.set({ [key]: (result[key] || 0) + 1 });
+  });
+}
+
 function getActiveSlide() {
   return document.querySelector(".highlight-detail-review.is-visible");
 }
@@ -152,6 +158,7 @@ function renderSuggestions(panel, suggestions, qaArea) {
 
       fillContentEditable(questionEl, suggestion.question);
       fillContentEditable(answerEl, answerText);
+      incrementStat("stats_use_this");
 
       const original = useBtn.textContent;
       useBtn.textContent = "Filled ✓";
@@ -166,6 +173,7 @@ function renderSuggestions(panel, suggestions, qaArea) {
     copyBtn.textContent = "Copy";
     copyBtn.addEventListener("click", async () => {
       await navigator.clipboard.writeText(`Q: ${suggestion.question}\nA: ${answerText}`);
+      incrementStat("stats_copy");
       const original = copyBtn.textContent;
       copyBtn.textContent = "Copied ✓";
       setTimeout(() => {
@@ -198,6 +206,7 @@ function onSuggestClick(panel) {
   if (!qaArea) return;
   if (mode !== "improve" && !slide) return;
 
+  incrementStat(mode === "improve" ? "stats_improve" : "stats_suggest");
   renderLoadingState(panel);
 
   const highlightText = slide?.querySelector(".highlight-text")?.textContent.trim() || "";
