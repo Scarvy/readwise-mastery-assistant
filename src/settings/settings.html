@@ -32,83 +32,193 @@
           </p>
 
           <form id="settings-form">
-            <label for="provider">Active provider</label>
-            <select id="provider" name="provider">
-              <option value="anthropic">Anthropic (Claude)</option>
-              <option value="openai">OpenAI (GPT)</option>
-            </select>
-
-            <fieldset>
-              <legend>Anthropic</legend>
-
-              <label for="anthropic-api-key">Anthropic API key</label>
-              <input
-                type="password"
-                id="anthropic-api-key"
-                name="anthropic-api-key"
-                placeholder="sk-ant-..."
-                autocomplete="off"
-              />
-              <p class="hint">
-                Stored locally in your browser
-                (<code>chrome.storage.local</code>) and sent only to
-                <code>api.anthropic.com</code>. Get a key at
-                <a
-                  href="https://console.anthropic.com/settings/keys"
-                  target="_blank"
-                  rel="noopener"
-                  >console.anthropic.com</a
-                >.
-              </p>
-
-              <label for="anthropic-model">Model</label>
-              <select id="anthropic-model" name="anthropic-model">
-                <option value="claude-haiku-4-5-20251001">
-                  Claude Haiku 4.5 (fast &amp; cheap — recommended)
-                </option>
-                <option value="claude-sonnet-4-6">
-                  Claude Sonnet 4.6 (higher quality)
-                </option>
-              </select>
+            <fieldset class="provider-option" data-provider-panel="anthropic">
+              <div class="provider-card" tabindex="0" role="button" aria-pressed="false">
+                <div class="provider-brand">
+                  <div class="provider-logo-frame" aria-hidden="true">
+                    <img
+                      src="../../public/anthropic-mono-128px.png"
+                      alt=""
+                      class="provider-logo"
+                    />
+                  </div>
+                  <div class="provider-copy-group">
+                    <label for="anthropic-api-key" class="provider-title">Anthropic</label>
+                    <p class="provider-description">
+                      Add your Anthropic API key to use Claude for card suggestions
+                    </p>
+                  </div>
+                </div>
+                <div class="provider-control">
+                  <button
+                    type="button"
+                    class="provider-toggle"
+                    aria-expanded="false"
+                    aria-controls="anthropic-fields"
+                  >
+                    <span>API Key</span>
+                    <span class="provider-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+              <div class="provider-fields" id="anthropic-fields" hidden>
+                <input
+                  type="password"
+                  id="anthropic-api-key"
+                  name="anthropic-api-key"
+                  placeholder="sk-ant-..."
+                  autocomplete="off"
+                />
+                <p class="hint">
+                  Stored locally in your browser
+                  (<code>chrome.storage.local</code>) and sent only to
+                  <code>api.anthropic.com</code>. Get a key at
+                  <a
+                    href="https://console.anthropic.com/settings/keys"
+                    target="_blank"
+                    rel="noopener"
+                    >console.anthropic.com</a
+                  >.
+                </p>
+                <label for="anthropic-model">Model</label>
+                <select id="anthropic-model" name="anthropic-model">
+                  <option value="claude-haiku-4-5-20251001">
+                    Claude Haiku 4.5 (fast &amp; cheap — recommended)
+                  </option>
+                  <option value="claude-sonnet-4-6">
+                    Claude Sonnet 4.6 (higher quality)
+                  </option>
+                </select>
+              </div>
             </fieldset>
 
-            <fieldset>
-              <legend>OpenAI</legend>
-
-              <label for="openai-api-key">OpenAI API key</label>
-              <input
-                type="password"
-                id="openai-api-key"
-                name="openai-api-key"
-                placeholder="sk-..."
-                autocomplete="off"
-              />
-              <p class="hint">
-                Stored locally in your browser
-                (<code>chrome.storage.local</code>) and sent only to
-                <code>api.openai.com</code>. Get a key at
-                <a
-                  href="https://platform.openai.com/api-keys"
-                  target="_blank"
-                  rel="noopener"
-                  >platform.openai.com</a
-                >.
-              </p>
-
-              <label for="openai-model">Model</label>
-              <select id="openai-model" name="openai-model">
-                <option value="gpt-4o-mini">
-                  GPT-4o mini (fast &amp; cheap — recommended)
-                </option>
-                <option value="gpt-4o">GPT-4o (higher quality)</option>
-              </select>
+            <fieldset class="provider-option" data-provider-panel="openai">
+              <div class="provider-card" tabindex="0" role="button" aria-pressed="false">
+                <div class="provider-brand">
+                  <div class="provider-logo-frame" aria-hidden="true">
+                    <img
+                      src="../../public/openai-light-128px.png"
+                      alt=""
+                      class="provider-logo provider-logo-openai"
+                    />
+                  </div>
+                  <div class="provider-copy-group">
+                    <label for="openai-api-key" class="provider-title">OpenAI</label>
+                    <p class="provider-description">
+                      Add your OpenAI API key to use GPT models for card suggestions
+                    </p>
+                  </div>
+                </div>
+                <div class="provider-control">
+                  <button
+                    type="button"
+                    class="provider-toggle"
+                    aria-expanded="false"
+                    aria-controls="openai-fields"
+                  >
+                    <span>API Key</span>
+                    <span class="provider-toggle-icon" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+              <div class="provider-fields" id="openai-fields" hidden>
+                <input
+                  type="password"
+                  id="openai-api-key"
+                  name="openai-api-key"
+                  placeholder="sk-..."
+                  autocomplete="off"
+                />
+                <p class="hint">
+                  Stored locally in your browser
+                  (<code>chrome.storage.local</code>) and sent only to
+                  <code>api.openai.com</code>. Get a key at
+                  <a
+                    href="https://platform.openai.com/api-keys"
+                    target="_blank"
+                    rel="noopener"
+                    >platform.openai.com</a
+                  >.
+                </p>
+                <label for="openai-model">Model</label>
+                <select id="openai-model" name="openai-model">
+                  <option value="gpt-4o-mini">
+                    GPT-4o mini (fast &amp; cheap — recommended)
+                  </option>
+                  <option value="gpt-4o">GPT-4o (higher quality)</option>
+                </select>
+              </div>
             </fieldset>
 
             <div class="actions">
-              <button type="submit">Save</button>
+              <button type="submit" id="save-button" disabled>Save</button>
               <span id="status" role="status"></span>
             </div>
           </form>
+        </section>
+
+        <section class="settings-panel">
+          <h2>Usage</h2>
+          <p class="subtitle">Your activity across review sessions.</p>
+          <div class="stats-list">
+            <article class="stat-row">
+              <div class="stat-card-head">
+                <span class="stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" class="stat-icon-svg">
+                    <path
+                      d="M4 12h3l2-4 3 8 2-4h6"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </span>
+                <span class="stat-title">Suggest Q&amp;A</span>
+              </div>
+              <p class="stat-value"><span id="stat-suggest">—</span> uses</p>
+              <p class="stat-comment">Times you generated a new flashcard suggestion.</p>
+            </article>
+            <article class="stat-row">
+              <div class="stat-card-head">
+                <span class="stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" class="stat-icon-svg">
+                    <path
+                      d="M6 18l4.5-1 7.5-7.5-3.5-3.5L7 13.5 6 18z"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </span>
+                <span class="stat-title">Improve card</span>
+              </div>
+              <p class="stat-value"><span id="stat-improve">—</span> uses</p>
+              <p class="stat-comment">Times you asked the assistant to refine an existing card.</p>
+            </article>
+            <article class="stat-row">
+              <div class="stat-card-head">
+                <span class="stat-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" class="stat-icon-svg">
+                    <path
+                      d="M5 12.5l4 4 10-10"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </span>
+                <span class="stat-title">Use this</span>
+              </div>
+              <p class="stat-value"><span id="stat-use-this">—</span> uses</p>
+              <p class="stat-comment">Times you accepted a suggestion and applied it to a card.</p>
+            </article>
+          </div>
         </section>
       </main>
     </div>
