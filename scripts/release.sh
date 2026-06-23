@@ -18,6 +18,11 @@ if [[ -z "$VERSION" ]]; then
 fi
 
 TAG="v${VERSION}"
+CURRENT_VERSION=$(node -p "require('./manifest.json').version")
+NEEDS_VERSION_BUMP=1
+if [[ "$CURRENT_VERSION" == "$VERSION" ]]; then
+  NEEDS_VERSION_BUMP=0
+fi
 
 DRAFT_ARGS=()
 if [[ "$DRAFT_FLAG" == "--draft" ]]; then
@@ -46,13 +51,17 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
-echo "==> Bumping manifest.json to $VERSION"
-node -e "
-  const fs = require('fs');
-  const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
-  m.version = '$VERSION';
-  fs.writeFileSync('manifest.json', JSON.stringify(m, null, 2) + '\n');
-"
+if [[ "$NEEDS_VERSION_BUMP" -eq 1 ]]; then
+  echo "==> Bumping manifest.json to $VERSION"
+  node -e "
+    const fs = require('fs');
+    const m = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+    m.version = '$VERSION';
+    fs.writeFileSync('manifest.json', JSON.stringify(m, null, 2) + '\n');
+  "
+else
+  echo "==> manifest.json already at $VERSION"
+fi
 
 echo "==> Building zip"
 ./scripts/build.sh
@@ -60,8 +69,10 @@ echo "==> Building zip"
 ZIP="dist/readwise-mastery-assistant-${VERSION}.zip"
 
 echo "==> Committing and tagging"
-git add manifest.json
-git commit -m "Bump version to ${VERSION}"
+if [[ "$NEEDS_VERSION_BUMP" -eq 1 ]]; then
+  git add manifest.json
+  git commit -m "Bump version to ${VERSION}"
+fi
 git tag "$TAG"
 
 echo "==> Pushing"
