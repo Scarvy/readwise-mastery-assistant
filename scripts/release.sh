@@ -3,18 +3,36 @@
 # pushes, and creates a GitHub release with auto-generated notes.
 #
 # Usage:
-#   ./scripts/release.sh <version>   e.g. ./scripts/release.sh 0.4.0
+#   ./scripts/release.sh <version> [--draft]
+#   e.g. ./scripts/release.sh 0.4.0 --draft
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 VERSION="${1:-}"
+DRAFT_FLAG="${2:-}"
+
 if [[ -z "$VERSION" ]]; then
-  echo "Usage: ./scripts/release.sh <version>" >&2
+  echo "Usage: ./scripts/release.sh <version> [--draft]" >&2
   exit 1
 fi
 
 TAG="v${VERSION}"
+
+DRAFT_ARGS=()
+if [[ "$DRAFT_FLAG" == "--draft" ]]; then
+  DRAFT_ARGS+=(--draft)
+elif [[ -n "$DRAFT_FLAG" ]]; then
+  echo "Usage: ./scripts/release.sh <version> [--draft]" >&2
+  exit 1
+fi
+
+RELEASE_ARGS=(--title "$TAG" --generate-notes)
+if [[ ${#DRAFT_ARGS[@]} -gt 0 ]]; then
+  RELEASE_ARGS+=("${DRAFT_ARGS[@]}")
+else
+  RELEASE_ARGS+=(--latest)
+fi
 
 # Guard: tag must not already exist
 if git rev-parse "$TAG" &>/dev/null; then
@@ -51,10 +69,7 @@ git push origin main
 git push origin "$TAG"
 
 echo "==> Creating GitHub release $TAG"
-gh release create "$TAG" "$ZIP" \
-  --title "$TAG" \
-  --generate-notes \
-  --latest
+gh release create "$TAG" "$ZIP" "${RELEASE_ARGS[@]}"
 
 echo ""
 echo "Released $TAG: https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/releases/tag/$TAG"
